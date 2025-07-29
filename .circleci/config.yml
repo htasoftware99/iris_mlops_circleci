@@ -1,22 +1,21 @@
 version: 2.1
 
 executors:
-  docker-executor:
-    docker:
-      - image: google/cloud-sdk:latest
+  machine-executor:
+    machine:
+      image: ubuntu-2204:current
     working_directory: ~/repo
 
 jobs:
   checkout_code:
-    executor: docker-executor
+    executor: machine-executor
     steps:
       - checkout
 
   build_docker_image:
-    executor: docker-executor
+    executor: machine-executor
     steps:
       - checkout
-      - setup_remote_docker
       - run:
           name: Authenticate with google cloud
           command: |
@@ -31,10 +30,9 @@ jobs:
               docker push us-central1-docker.pkg.dev/$GOOGLE_PROJECT_ID/mlops-app/mlops-app:latest
 
   deploy_to_gke:
-    executor: docker-executor
+    executor: machine-executor
     steps:
       - checkout
-      - setup_remote_docker
       - run:
           name: Authenticate with google cloud
           command: |
@@ -46,6 +44,7 @@ jobs:
           name: Configure GKE
           command: |
               gcloud container clusters get-credentials $GKE_CLUSTER --region $GOOGLE_COMPUTE_REGION --project $GOOGLE_PROJECT_ID
+
       - run:
           name: Deploy to GKE
           command: |
